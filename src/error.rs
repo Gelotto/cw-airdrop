@@ -1,4 +1,4 @@
-use cosmwasm_std::{StdError};
+use cosmwasm_std::StdError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -8,4 +8,7 @@ pub enum ContractError {
 
   #[error("ValidationError")]
   ValidationError {},
+
+  #[error("NotAuthorized")]
+  NotAuthorized { reason: Option<String> },
 }

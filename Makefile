@@ -3,6 +3,7 @@ contract_addr_filepath ?= $(release_dirpath)/contract_addr.txt
 wasm_filename ?= cw_contract_template.wasm
 release_dirpath ?= ./release
 sender ?= juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y
+label ?= airdrop
 
 # build optimized WASM artifact
 build:
@@ -14,7 +15,7 @@ deploy:
 
 # instantiate last contract to be deployed using code ID in release dir code-id file
 instantiate:
-	./bin/instantiate $(network) $(sender) $(value)
+	./bin/instantiate $(network) $(sender) $(label) $(cw20_token_address)
 
 # run all unit tests
 test:
@@ -28,8 +29,17 @@ schemas:
 validator:
 	./bin/validator
 
-do-something:
-	./client.sh do-something $(network) $(contract_addr_filepath) $(sender) $(value)
+increment-claim:
+	./client.sh increment-claim $(network) $(contract_addr_filepath) $(sender) $(claimant) $(amount) null
 
-get-something:
-	./client.sh get-something $(network) $(contract_addr_filepath) $(sender)
+increment-claim-batch:
+	./client.sh increment-claim-batch $(network) $(contract_addr_filepath) $(sender) $(claimant) $(amount) null
+
+claim:
+	./client.sh claim $(network) $(contract_addr_filepath) $(sender) $(claimant) $(amount)
+
+withdraw-claim:
+	./client.sh withdraw-claim $(network) $(contract_addr_filepath) $(sender) $(claimant) $(amount)
+
+get-claim-amount:
+	./client.sh get-claim-amount $(network) $(contract_addr_filepath) $(claimant)

@@ -20,10 +20,7 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
   set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
   state::initialize(deps, &env, &info, &msg)?;
-  Ok(
-    Response::new()
-      .add_attribute("action", "instantiate")
-  )
+  Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -34,18 +31,29 @@ pub fn execute(
   msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
   match msg {
-    ExecuteMsg::DoSomething { value } => execute::do_something(deps, env, info, &value),
+    ExecuteMsg::IncrementClaim {
+      claimant,
+      amount,
+      expiry,
+    } => execute::increment_claim(deps, env, info, claimant, amount, expiry),
+    ExecuteMsg::IncrementClaimBatch { claims } => {
+      execute::increment_claim_batch(deps, env, info, claims)
+    },
+    ExecuteMsg::WithdrawClaim { claimant } => execute::withdraw_claim(deps, env, info, claimant),
+    ExecuteMsg::Claim { amount } => execute::claim(deps, env, info, amount),
   }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(
   deps: Deps,
-  _env: Env,
+  env: Env,
   msg: QueryMsg,
 ) -> StdResult<Binary> {
   let result = match msg {
-    QueryMsg::GetSomething {} => to_binary(&query::get_something(deps)?),
+    QueryMsg::GetClaimAmount { claimant } => {
+      to_binary(&query::get_claim_amount(deps, env, claimant)?)
+    },
   }?;
   Ok(result)
 }

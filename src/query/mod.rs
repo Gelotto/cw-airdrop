@@ -1,3 +1,3 @@
-mod get_something;
+mod get_claim_amount;
 
-pub use get_something::get_something;
+pub use get_claim_amount::get_claim_amount;

@@ -27,11 +27,12 @@ case $NETWORK in
     ;;
 esac
 
-
-do_something() {
+increment_claim() {
   sender=$1
-  value=$2
-  msg='{"do_something":{"value":"'$value'"}}'
+  claimant=$2
+  amount=$3
+  expiry=$4
+  msg='{"increment_claim":{"claimant":"'$claimant'","amount":"'$amount'","expiry":'$expiry'}}'
   flags="\
   --node $NODE \
   --gas-prices 0.025$DENOM \
@@ -49,8 +50,78 @@ do_something() {
 }
 
 
-get_something() {
-  query='{"get_something":{}}'
+increment_claim_batch() {
+  sender=$1
+  claimant=$2
+  amount=$3
+  expiry=$4
+  msg='{"increment_claim_batch":{"claims":[{"claimant":"'$claimant'","amount":"'$amount'","expiry":'$expiry'},{"claimant":"'$claimant'","amount":"'$amount'","expiry":'$expiry'}]}}'
+  flags="\
+  --node $NODE \
+  --gas-prices 0.025$DENOM \
+  --chain-id $CHAIN_ID \
+  --from $sender \
+  --gas auto \
+  --gas-adjustment 1.5 \
+  --broadcast-mode block \
+  --output json \
+  -y \
+  "
+  echo junod tx wasm execute $CONTRACT_ADDR "$msg" "$flags"
+  response=$(junod tx wasm execute "$CONTRACT_ADDR" "$msg" $flags)
+  echo $response | ./bin/utils/base64-decode-attributes | jq
+}
+
+claim() {
+  sender=$1
+  claimant=$2
+  amount=$3
+  if [ -n "$amount" ]; then
+    msg='{"claim":{"claimant":"'$claimant'", "amount":"'$amount'"}}'
+  else 
+    msg='{"claim":{"claimant":"'$claimant'"}}'
+  fi
+  flags="\
+  --node $NODE \
+  --gas-prices 0.025$DENOM \
+  --chain-id $CHAIN_ID \
+  --from $sender \
+  --gas auto \
+  --gas-adjustment 1.5 \
+  --broadcast-mode block \
+  --output json \
+  -y \
+  "
+  echo junod tx wasm execute $CONTRACT_ADDR "$msg" "$flags"
+  response=$(junod tx wasm execute "$CONTRACT_ADDR" "$msg" $flags)
+  echo $response | ./bin/utils/base64-decode-attributes | jq
+}
+
+withdraw_claim() {
+  sender=$1
+  claimant=$2
+  msg='{"withdraw_claim":{"claimant":"'$claimant'"}}'
+  flags="\
+  --node $NODE \
+  --gas-prices 0.025$DENOM \
+  --chain-id $CHAIN_ID \
+  --from $sender \
+  --gas auto \
+  --gas-adjustment 1.5 \
+  --broadcast-mode block \
+  --output json \
+  -y \
+  "
+  echo junod tx wasm execute $CONTRACT_ADDR "$msg" "$flags"
+  response=$(junod tx wasm execute "$CONTRACT_ADDR" "$msg" $flags)
+  echo $response | ./bin/utils/base64-decode-attributes | jq
+}
+
+
+
+get_claim_amount() {
+  claimant=$1
+  query='{"get_claim_amount":{"claimant":"'$claimant'"}}'
   flags="--chain-id $CHAIN_ID --output json --node $NODE"
   echo junod query wasm contract-state smart $CONTRACT_ADDR "$query" $flags
   response=$(junod query wasm contract-state smart $CONTRACT_ADDR "$query" $flags)
@@ -59,12 +130,15 @@ get_something() {
 
 set -e
 
-echo $*
 case $CMD in
-  do-something)
-    do_something $1 $2
-    ;;
-  get-something) 
-    get_something
-    ;;
+  increment-claim)
+    increment_claim $*;;
+  increment-claim-batch)
+    increment_claim_batch $*;;
+  withdraw-claim)
+    withdraw_claim $*;;
+  claim)
+    claim $*;;
+  get-claim-amount) 
+    get_claim_amount $*;;
 esac
